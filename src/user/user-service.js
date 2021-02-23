@@ -1,3 +1,5 @@
+/* eslint-disable no-useless-escape */
+/* eslint-disable no-undef */
 const bcrypt = require('bcryptjs')
 
 const REGEX_UPPER_LOWER_NUMBER_SPECIAL = /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\$%\^&])[\S]+/
@@ -46,7 +48,7 @@ const UserService = {
       const [languageId] = await trx
         .into('language')
         .insert([
-          { name: 'French', user_id },
+          { name: 'Korean', user_id },
         ], ['id'])
 
       // when inserting words,
@@ -58,14 +60,14 @@ const UserService = {
         .first()
 
       const languageWords = [
-        ['entraine toi', 'practice', 2],
-        ['bonjour', 'hello', 3],
-        ['maison', 'house', 4],
-        ['développeur', 'developer', 5],
-        ['traduire', 'translate', 6],
-        ['incroyable', 'amazing', 7],
-        ['chien', 'dog', 8],
-        ['chat', 'cat', null],
+        ['안녕하세요', 'Hello', 2],
+        ['감사합니다', 'Thank you', 3],
+        ['집', 'house', 4],
+        ['개발자', 'developer', 5],
+        ['생각', 'Thinking', 6],
+        ['고양이', 'Cat', 7],
+        ['강아지', 'Dog', 8],
+        ['나라', 'Country', null],
       ]
 
       const [languageHeadId] = await trx

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const { JsonWebTokenError } = require('jsonwebtoken')
 const AuthService = require('../auth/auth-service')
 

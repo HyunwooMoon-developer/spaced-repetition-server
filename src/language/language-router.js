@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const express = require('express')
 const LanguageService = require('./language-service')
 const { requireAuth } = require('../middleware/jwt-auth')

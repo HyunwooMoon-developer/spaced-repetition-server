@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-undef */
 const { NODE_ENV } = require('../config')
 
 module.exports = function errorHandler(error, req, res, next) {

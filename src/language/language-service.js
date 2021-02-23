@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const LanguageService = {
   getUsersLanguage(db, user_id) {
     return db
