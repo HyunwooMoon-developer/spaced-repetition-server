@@ -1,4 +1,8 @@
 /* eslint-disable no-undef */
+/* eslint-disable no-unused-vars */
+const LinkedList = require("../LinkedList/LinkedList")
+
+/* eslint-disable no-undef */
 const LanguageService = {
   getUsersLanguage(db, user_id) {
     return db
@@ -44,6 +48,38 @@ const LanguageService = {
       )
       .where({id})
       .first()
+  },
+
+  createLinkedList(db, list){
+
+    const LL =new LinkedList();
+
+    list.map(item=> {
+      LL.insertLast(item)
+    })
+    return LL;
+  },
+
+  updateWords(db, updateWords, language_id, total_score){
+    return db.transaction(async trx=>{
+      return Promise.all([
+        trx('language')
+        .where({id : language_id})
+        .update({total_score : total_score,
+        head: updateWords[0].id}),
+        ...updateWords.map((word, i) => {
+          if(i +1 >= updateWords.length){
+            word.next = null;
+          }
+          else{
+            word.next = updateWords[i+1].id;
+          }
+          return trx('word')
+                .where({id : word.id})
+                .update({...word})
+        })
+      ])
+    })
   }
 }
 
