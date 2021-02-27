@@ -125,7 +125,7 @@ languageRouter.post("/guess", jsonParser, async (req, res, next) => {
       language.total_score
     );
 
-    res.json({
+    res.status(200).json({
       answer: answer,
       isCorrect: isCorrect,
       nextWord: nextWord,
