@@ -1,86 +1,111 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
-const LinkedList = require("../LinkedList/LinkedList")
+const { LinkedList } = require("../LinkedList/LinkedList");
 
-/* eslint-disable no-undef */
 const LanguageService = {
   getUsersLanguage(db, user_id) {
     return db
-      .from('language')
+      .from("language")
       .select(
-        'language.id',
-        'language.name',
-        'language.user_id',
-        'language.head',
-        'language.total_score',
+        "language.id",
+        "language.name",
+        "language.user_id",
+        "language.head",
+        "language.total_score"
       )
-      .where('language.user_id', user_id)
-      .first()
+      .where("language.user_id", user_id)
+      .first();
   },
 
   getLanguageWords(db, language_id) {
     return db
-      .from('word')
+      .from("word")
       .select(
-        'id',
-        'language_id',
-        'original',
-        'translation',
-        'next',
-        'memory_value',
-        'correct_count',
-        'incorrect_count',
+        "id",
+        "language_id",
+        "original",
+        "translation",
+        "next",
+        "memory_value",
+        "correct_count",
+        "incorrect_count"
       )
-      .where({ language_id })
+      .where({ language_id });
   },
-  getNext(db, id){
+  getLanguageHead(db, language_id) {
     return db
-      .from('word')
+      .from("word")
       .select(
-        'id',
-        'language_id',
-        'original',
-        'translation',
-        'next',
-        'memory_value',
-        'correct_count',
-        'incorrect_count',
+        "word.id",
+        "word.language_id",
+        "word.original",
+        "word.translation",
+        "word.next",
+        "word.memory_value",
+        "word.correct_count",
+        "word.incorrect_count",
+        "language.total_score"
       )
-      .where({id})
-      .first()
+      .leftJoin("language", "language.head", "word.id")
+      .where("language.id", language_id)
+      .first();
   },
 
-  createLinkedList(db, list){
+  populateLinkedList(language, list) {
+    const LL = new LinkedList({
+      id: language.id,
+      name: language.name,
+      total_score: language.total_score,
+    });
 
-    const LL =new LinkedList();
+    let words = list.find((word) => word.id === language.head);
 
-    list.map(item=> {
-      LL.insertLast(item)
-    })
+    LL.insert({
+      id: words.id,
+      original: words.original,
+      translation: words.translation,
+      memory_value: words.memory_value,
+      correct_count: words.correct_count,
+      incorrect_count: words.incorrect_count,
+    });
+
+    while (words.next) {
+      words = list.find((word) => word.id === words.next);
+
+      LL.insert({
+        id: words.id,
+        original: words.original,
+        translation: words.translation,
+        memory_value: words.memory_value,
+        correct_count: words.correct_count,
+        incorrect_count: words.incorrect_count,
+      });
+    }
+
     return LL;
   },
 
-  updateWords(db, updateWords, language_id, total_score){
-    return db.transaction(async trx=>{
-      return Promise.all([
-        trx('language')
-        .where({id : language_id})
-        .update({total_score : total_score,
-        head: updateWords[0].id}),
-        ...updateWords.map((word, i) => {
-          if(i +1 >= updateWords.length){
-            word.next = null;
-          }
-          else{
-            word.next = updateWords[i+1].id;
-          }
-          return trx('word')
-                .where({id : word.id})
-                .update({...word})
-        })
+  persistLinkedList(db, LL) {
+    return db.transaction((trx) =>
+      Promise.all([
+        db("language").transacting(trx).where("id", LL.id).update({
+          total_score: LL.total_score,
+          head: LL.head.value.id,
+        }),
+        ...LL.map((node) =>
+          db("word")
+            .transacting(trx)
+            .where("id", node.value.id)
+            .update({
+              memory_value: node.value.memory_value,
+              correct_count: node.value.correct_count,
+              incorrect_count: node.value.incorrect_count,
+              next: node.next ? node.next.value.id : null,
+            })
+        ),
       ])
-    })
-  }
-}
+    );
+  },
+};
 
-module.exports = LanguageService
+module.exports = LanguageService;

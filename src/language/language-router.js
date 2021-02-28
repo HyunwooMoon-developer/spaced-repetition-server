@@ -4,7 +4,7 @@ const LanguageService = require("./language-service");
 const { requireAuth } = require("../middleware/jwt-auth");
 
 const languageRouter = express.Router();
-const jsonParser = express.json();
+const jsonBodyParser = express.json();
 
 languageRouter.use(requireAuth).use(async (req, res, next) => {
   try {
@@ -44,96 +44,72 @@ languageRouter.get("/", async (req, res, next) => {
 
 languageRouter.get("/head", async (req, res, next) => {
   try {
-    const nextWord = await LanguageService.getNext(
+    const word = await LanguageService.getLanguageHead(
       req.app.get("db"),
       req.language.id
     );
-    /*"nextWord": "Testnextword",
-    "wordCorrectCount": 222,
-    "wordIncorrectCount": 333,
-    "totalScore": 999*/
+
     res.json({
-      nextWord: nextWord.original,
-      totalScore: req.language.total_score,
-      wordCorrectCount: nextWord.correct_count,
-      wordIncorrectCount: nextWord.incorrect_count,
+      nextWord: word.original,
+      wordCorrectCount: word.correct_count,
+      wordIncorrectCount: word.incorrect_count,
+      totalScore: word.total_score,
     });
-    next();
   } catch (error) {
     next(error);
   }
 });
 
-languageRouter.post("/guess", jsonParser, async (req, res, next) => {
-  const { guess } = req.body;
-  if (!guess) {
-    res.status(400).json({
-      error: `Missing 'guess' in request body`,
-    });
-  }
+languageRouter.post("/guess", jsonBodyParser, async (req, res, next) => {
   try {
+    const { guess } = req.body;
+
+    if (!guess)
+      return res.status(400).json({
+        error: `Missing 'guess' in request body`,
+      });
+
     const words = await LanguageService.getLanguageWords(
       req.app.get("db"),
       req.language.id
     );
 
-    const language = await LanguageService.getUsersLanguage(
-      req.app.get("db"),
-      req.user.id
-    );
+    const LL = LanguageService.populateLinkedList(req.language, words);
 
-    const wordList = await LanguageService.createLinkedList(
-      req.app.get("db"),
-      words
-    );
+    const Head = LL.head;
+    const answer = Head.value.translation;
 
     let isCorrect;
-    let Head = wordList.head;
-    let answer = wordList.head.value.translation;
-    let nextWord = Head.next.value.original;
-    let correct_count = Head.next.value.correct_count;
-    let M = Head.value.memory_value;
 
-    if (guess === wordList.head.value.translation) {
+
+    if (guess === answer) {
       isCorrect = true;
-      language.total_score += 1;
-      Head.value.correct_count += 1;
-      M *= 2;
-      Head.value.memory_value = M;
-      wordList.head = Head.next;
-      wordList.insertAt(Head.value, M);
+
+      LL.head.value.memory_value = Number(Head.value.memory_value) * 2;
+
+      LL.head.value.correct_count = Number(LL.head.value.correct_count) + 1;
+
+      LL.total_score = Number(LL.total_score) + 1;
     } else {
       isCorrect = false;
-      wordList.head.value.incorrect_count += 1;
-      Head.value.memory_value = 1;
-      wordList.head = Head.next;
-      wordList.insertAt(Head.value, M);
+
+      LL.head.value.memory_value = 1;
+
+      LL.head.value.incorrect_count = Number(LL.head.value.incorrect_count) + 1;
     }
 
-    let Nodes = [];
-    let currentNode = wordList.head;
-    while (currentNode.next !== null) {
-      Nodes = [...Nodes, currentNode.value];
-      currentNode = currentNode.next;
-    }
-    Nodes = [...Nodes, currentNode.value];
+    LL.shiftHeadBy(LL.head.value.memory_value);
 
-    await LanguageService.updateWords(
-      req.app.get("db"),
-      Nodes,
-      language.id,
-      language.total_score
-    );
+    await LanguageService.persistLinkedList(req.app.get("db"), LL);
 
-    res.status(200).json({
-      answer: answer,
-      isCorrect: isCorrect,
-      nextWord: nextWord,
-      totalScore: language.total_score,
-      wordCorrectCount: correct_count,
-      wordIncorrectCount: wordList.head.value.incorrect_count,
+    res.json({
+      nextWord: LL.head.value.original,
+      wordCorrectCount: LL.head.value.correct_count,
+      wordIncorrectCount: LL.head.value.incorrect_count,
+      totalScore: LL.total_score,
+      answer,
+      isCorrect,
     });
-    next();
   } catch (error) {
     next(error);
   }

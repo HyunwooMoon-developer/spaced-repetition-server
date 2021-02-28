@@ -23,8 +23,8 @@ INSERT INTO "word" ("id", "language_id", "original", "translation", "next")
 VALUES
   (1, 1, '안녕하세요', 'Hello', 2),
   (2, 1, '감사합니다', 'Thank you', 3),
-  (3, 1, '집', 'house', 4),
-  (4, 1, '개발자', 'developer', 5),
+  (3, 1, '집', 'House', 4),
+  (4, 1, '개발자', 'Developer', 5),
   (5, 1, '생각', 'Thinking', 6),
   (6, 1, '고양이', 'Cat', 7),
   (7, 1, '강아지', 'Dog', 8),
