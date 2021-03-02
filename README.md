@@ -2,7 +2,7 @@
 
 ## Link
 
-Live app : 
+Live app : https://spaced-repetition-pj5jxyjdq-hyunwoomoon-developer.vercel.app/
 
 Server Repo : https://github.com/HyunwooMoon-developer/spaced-repetition-server.git
 
