@@ -1,5 +1,19 @@
 # Spaced repetition API!
 
+## Link
+
+Live app : 
+Server Repo : https://github.com/HyunwooMoon-developer/spaced-repetition-server.git
+Client Repo : https://github.com/HyunwooMoon-developer/spaced-repetition-app.git
+
+
+![Screenshot](./src/img/login-image.png)
+
+![Screenshot](./src/img/display-image.png)
+
+![Screenshot](./src/img/learning-image.png)
+
+
 ## Local dev setup
 
 If using user `dunder-mifflin`:
